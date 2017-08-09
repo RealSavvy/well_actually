@@ -15,8 +15,34 @@ Or install it yourself as:
     $ gem install well_actually
 
 ## Usage
+```ruby
+Dog < ActiveRecord::Base
+  extend WellActually
+  well_actually overwrite: :overwrite, attributes: [:name, :show, :birthday]
+end
 
-TODO: Write usage instructions here
+dog = Dog.new(name: "Radar", breed: "Korgi", age: 10, show: true, birthday: Time.new(2010,1,1))
+puts dog.name
+=> "Radar"
+puts dog.age
+=> 10
+
+# Overwrite an overwriteable attribute
+dog.overwrite["name"] = "Sadie"
+# Can't overwrite an unoverwriteable attribute
+dog.overwrite["age"] = 12
+dog_actually = dog.well_actually
+puts dog_actually.name
+=> "Sadie"
+puts dog_actually.age
+=> 10
+
+#Oringal Object Doesn't Change
+puts dog.name
+=> "Radar"
+puts dog.age
+=> 10
+```
 
 ## Development
 

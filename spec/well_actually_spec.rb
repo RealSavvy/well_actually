@@ -16,6 +16,11 @@ RSpec.shared_examples "basic tests" do |sufix|
     expect(dog_actually.name).to eql "Ray"+sufix
   end
 
+  it "overwritten will filter down to dependent method" do
+    dog.public_send(overwrite_attribute)["name"] = "Ray"
+    expect(dog_actually.fullname).to eql "Ray"+sufix+" "+"Korgi"+sufix
+  end
+
   it "a nil overwritten value should result in the actual value" do
     dog.public_send(overwrite_attribute)["name"] = nil
     expect(dog_actually.name).to eql "Radar"+sufix
@@ -109,6 +114,10 @@ RSpec.describe WellActually do
         def birthday= value
           @birthday = (value.respond_to?(:to_time) ? value.to_time : DateTime.iso8601(value.to_s).to_time)
         end
+      end
+
+      def fullname
+        name.to_s+" "+breed.to_s
       end
 
       extend WellActually
