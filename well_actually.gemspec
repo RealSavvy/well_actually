@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'well_actually/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "well_actually"
+  spec.name          = "well-actually"
   spec.version       = WellActually::VERSION
   spec.authors       = ["Andrew Rove"]
   spec.email         = ["andrew@realsavvy.com"]

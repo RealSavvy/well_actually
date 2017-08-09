@@ -3,7 +3,7 @@
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'well_actually'
+gem 'well-actually'
 ```
 
 And then execute:
