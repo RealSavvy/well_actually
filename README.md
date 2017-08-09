@@ -12,7 +12,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install well_actually
+    $ gem install well-actually
 
 ## Usage
 ```ruby
