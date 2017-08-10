@@ -1,21 +1,23 @@
 module WellActually
   class Mounter
-    attr_reader :klass, :overwrites, :attributes
+    attr_reader :klass, :overwrites, :attributes, :strick
 
     BLANK_RE = defined?(String::BLANK_RE) ? String::BLANK_RE : /\A[[:space:]]*\z/
 
-    def initialize(klass:, overwrites: nil, overwrite: nil, attributes:)
+    def initialize(klass:, overwrites: nil, overwrite: nil, attributes:, strict:false)
       overwrites = overwrite || overwrites
       raise ArgumentError.new("overwrite must be a symbol or an array of symbols") unless overwrites.is_a?(Symbol) || (overwrites.is_a?(Array) && overwrites.all?{|a| a.is_a?(Symbol)})
       raise ArgumentError.new("attributes must be an array of symbols") unless attributes.is_a?(Array) && attributes.all?{|a| a.is_a?(Symbol)}
       @klass = klass
       @overwrites = overwrites
       @attributes = attributes.uniq
+      @strict = strict
     end
 
     def mount
       klass.class_variable_set(:@@well_actually_attributes, attributes.map{|_attr| _attr.to_s})
       klass.class_variable_set(:@@well_actually_overwrites, [*overwrites])
+      klass.class_variable_set(:@@well_actually_strict, strick)
 
       klass.send(:define_singleton_method, :well_actually_attributes) do
         self.class_variable_get(:@@well_actually_attributes)
@@ -29,10 +31,14 @@ module WellActually
         self.class_variable_get(:@@well_actually_overwrites)
       end
 
+      klass.send(:define_singleton_method, :well_actually_strict) do
+        self.class_variable_get(:@@well_actually_strict)
+      end
+
       klass.send(:define_method, :well_actually_overwrites) do
         self.class.well_actually_overwrites.map do |overwrite|
-          self.public_send(overwrite)
-        end.reduce({}) do |result, overwrite|
+          self.public_send(overwrite) if (self.respond_to?(overwrite) ||  self.class.well_actually_strict)
+        end.compact.reduce({}) do |result, overwrite|
           result.merge(overwrite || {}) do |key, v1, v2|
             v1 = nil unless self.well_actually_overwrite_value_check(key, v1)
             v2 = nil unless self.well_actually_overwrite_value_check(key, v2)

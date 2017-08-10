@@ -91,6 +91,10 @@ RSpec.describe WellActually do
     :overwrite
   end
 
+  let(:strict) do
+    false
+  end
+
   let(:base_class) do
     Class.new(*inherits_from_class).tap do |klass|
       klass.class_eval %Q{
@@ -135,7 +139,7 @@ RSpec.describe WellActually do
         end
 
         extend WellActually
-        well_actually overwrites: [:#{overwrite_attribute}, :fallback], attributes: [:name, :age, :show, :birthday, :owner]
+        well_actually overwrites: [:doesnt_exist, :#{overwrite_attribute}, :fallback], attributes: [:name, :age, :show, :birthday, :owner], strict: #{strict}
       }
     end
   end
@@ -200,5 +204,15 @@ RSpec.describe WellActually do
     end
 
     include_examples "basic tests", ""
+  end
+
+  context "strict is true" do
+    let(:strict) do
+      true
+    end
+
+    it "strict mode will raise an error if an overwrite method is missing" do
+      expect{dog_actually.name}.to raise_error(NameError)
+    end
   end
 end
