@@ -1,5 +1,7 @@
 ## Installation
 
+Is tested with pure ruby classes and classes that inherit from ActiveRecord::Base, rails >= 4 supported.
+
 Add this line to your application's Gemfile:
 
 ```ruby
@@ -18,6 +20,8 @@ Or install it yourself as:
 ```ruby
 Dog < ActiveRecord::Base
   extend WellActually
+  # overwrite or overwrites option can be a symbol or an array of symbol, earlier takes precedence over later
+  # attributes must be an array of symbols
   well_actually overwrite: :overwrite, attributes: [:name, :show, :birthday]
 end
 

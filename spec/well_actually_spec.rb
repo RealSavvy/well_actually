@@ -59,6 +59,16 @@ RSpec.shared_examples "basic tests" do |sufix|
     expect(dog_no_overwrite.well_actually.name).to eql "Radar"+sufix
   end
 
+  it "the further down the list the lower precedence of the overwrite" do
+    expect(dog.well_actually.owner).to eql "Andrew"
+
+    dog.fallback["owner"] = "Whitney"
+    expect(dog.well_actually.owner).to eql "Whitney"
+
+    dog.public_send(overwrite_attribute)["owner"] = "Eric"
+    expect(dog.well_actually.owner).to eql "Eric"
+  end
+
   if defined?(ActiveSupport)
     it "well_actually instances are read only and do not cause the original instances to become read only" do
       expect(dog.readonly?).to eql false
@@ -82,52 +92,56 @@ RSpec.describe WellActually do
   end
 
   let(:base_class) do
-    klass = Class.new(*inherits_from_class)
-    klass.class_eval %Q{
-      attr_accessor :#{overwrite_attribute}
-      if defined?(ActiveRecord::Base)
-        self.table_name = "dogs"
-      else
-        attr_accessor :name
-        attr_reader   :breed
-        attr_reader   :age
-        attr_reader   :show
-        attr_reader   :birthday
+    Class.new(*inherits_from_class).tap do |klass|
+      klass.class_eval %Q{
+        attr_accessor :#{overwrite_attribute}
+        attr_accessor :fallback
+        if defined?(ActiveRecord::Base)
+          self.table_name = "dogs"
+        else
+          attr_accessor :name
+          attr_reader   :breed
+          attr_reader   :age
+          attr_reader   :show
+          attr_reader   :birthday
+          attr_accessor :owner
 
-        def initialize(#{overwrite_attribute}:nil, name: nil, breed: nil, age: nil, show: nil, birthday: nil)
-          self.public_send(:"#{overwrite_attribute}=", #{overwrite_attribute})
-          @name = name
-          @breed = breed
-          self.age = age
-          self.show = show
-          self.birthday = birthday
+          def initialize(#{overwrite_attribute}: nil, fallback: nil, name: nil, breed: nil, age: nil, show: nil, birthday: nil, owner: nil)
+            self.public_send(:"#{overwrite_attribute}=", #{overwrite_attribute})
+            @fallback = fallback
+            @name = name
+            @breed = breed
+            self.age = age
+            self.show = show
+            self.birthday = birthday
+            @owner = owner
+          end
+
+          def age= value
+            @age = value.to_i
+          end
+
+          def show= value
+            @show = !!value
+          end
+
+          def birthday= value
+            @birthday = (value.respond_to?(:to_time) ? value.to_time : DateTime.iso8601(value.to_s).to_time)
+          end
         end
 
-        def age= value
-          @age = value.to_i
+        def fullname
+          name.to_s+" "+breed.to_s
         end
 
-        def show= value
-          @show = !!value
-        end
-
-        def birthday= value
-          @birthday = (value.respond_to?(:to_time) ? value.to_time : DateTime.iso8601(value.to_s).to_time)
-        end
-      end
-
-      def fullname
-        name.to_s+" "+breed.to_s
-      end
-
-      extend WellActually
-      well_actually overwrite: :#{overwrite_attribute}, attributes: [:name, :age, :show, :birthday]
-    }
-    klass
+        extend WellActually
+        well_actually overwrites: [:#{overwrite_attribute}, :fallback], attributes: [:name, :age, :show, :birthday, :owner]
+      }
+    end
   end
 
   let(:dog_attributes) do
-    {name: "Radar", breed: "Korgi", age: 10, show: true, birthday: Time.new(2010,1,1)}
+    {name: "Radar", breed: "Korgi", age: 10, show: true, birthday: Time.new(2010,1,1), owner: "Andrew", fallback: {}}
   end
 
   let(:birthday_overwrite) do
@@ -160,17 +174,17 @@ RSpec.describe WellActually do
 
   context "when used from a child class" do
     let(:dog_klass) do
-      klass = Class.new(base_class)
-      klass.class_eval do
-        def name
-          "#{super} Dog"
-        end
+      Class.new(base_class).tap do |klass|
+        klass.class_eval do
+          def name
+            "#{super} Dog"
+          end
 
-        def breed
-          "#{super} Dog"
+          def breed
+            "#{super} Dog"
+          end
         end
       end
-      klass
     end
 
     include_examples "basic tests", " Dog"

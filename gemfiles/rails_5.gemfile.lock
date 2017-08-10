@@ -1,7 +1,7 @@
 PATH
   remote: ..
   specs:
-    well_actually (0.1.0)
+    well-actually (0.1.0)
 
 GEM
   remote: https://rubygems.org/
@@ -128,13 +128,13 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  appraisal
+  appraisal (~> 2.2)
   bundler (~> 1.14)
   rails (= 5.1.3)
   rake (~> 10.0)
   rspec (~> 3.0)
   sqlite3
-  well_actually!
+  well-actually!
 
 BUNDLED WITH
    1.14.6
