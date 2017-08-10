@@ -5,7 +5,7 @@ Is tested with pure ruby classes and classes that inherit from ActiveRecord::Bas
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'well-actually'
+gem 'well-actually', require: 'well_actually'
 ```
 
 And then execute:
